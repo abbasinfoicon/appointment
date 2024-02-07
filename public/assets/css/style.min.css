@@ -15621,7 +15621,7 @@ button {
 
 .headingWithButton h5 {
     margin: 0;
-    width: 100%;
+    /* width: 100%; */
 }
 
 .headingWithButton .btn {

@@ -116,7 +116,7 @@ const Prescription = () => {
       </div>
 
 
-      <div className="row mt_60">
+      <div className="row mt_60 d-none">
         <div className="col-12">
           <div id="pagination">
             <nav aria-label="...">
