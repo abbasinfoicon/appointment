@@ -6,6 +6,7 @@ import FetchData from '@/app/components/FetchData';
 import { useCookies } from 'react-cookie';
 import Loading from '@/app/loading';
 import DeleteModal from '@/app/(backend)/components/DeleteModal';
+import { useGetAppointmentQuery } from '@/redux/slices/serviceApi';
 
 const PatientDetail = () => {
   const params = useParams();
@@ -16,6 +17,8 @@ const PatientDetail = () => {
   const [loading, setLoading] = useState(true);
   const [deleteContent, setDeleteContent] = useState(false);
   const [deleteId, setDeleteId] = useState('');
+  const allAppointment = useGetAppointmentQuery(token);
+  const [appointment, setAppointment] = useState([])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,9 +46,28 @@ const PatientDetail = () => {
     setDeleteId(did);
   }
 
+  useEffect(() => {
+    if (allAppointment.status === "fulfilled" && allAppointment.data) {
+      const patientAppointments = allAppointment.data.data.filter((item) => {
+        return item.patient.id.toString() === id;
+      });
+      setAppointment(patientAppointments);
+    }
+  }, [allAppointment.status, id]);
+
+  const isDatePassed = (dateString) => {
+    const currentDate = new Date();
+    const expireDate = new Date(dateString);
+    expireDate.setDate(expireDate.getDate() + 1);
+    expireDate.setHours(23, 59, 59, 999);
+    return currentDate > expireDate;
+  };
+
   if (loading) {
     return <Loading />;
   }
+
+  console.log("Patient appointment:", appointment)
 
   return (
     <div className="container-fluid">
@@ -90,6 +112,44 @@ const PatientDetail = () => {
               <Link className="btn btn-primary btn-rounded pl-3 pr-3" href={`/dashboard/patients`} ><i className="icon-list pr-1"></i>All View Patient</Link>
               <Link className="btn btn-info btn-rounded pl-3 pr-3 mx-2" href={`/dashboard/patients/edit/${data.id}`}><i className="icon-pencil pr-1"></i> Edit </Link>
               <button className='btn btn-rounded btn-danger' onClick={() => handleDeletePopup(data.id)}><i className="icon-trash pr-1"></i> Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-xl-8 col-xxl-6 col-lg-6 col-md-12">
+
+          <div className="card card-custom">
+            <div className="card-header">
+              <h4 className="card-title">Appointment Lists</h4>
+
+              <Link className="btn btn-info btn-rounded pl-3 pr-3" href={`${id}/appointment`}><i className="icon-docs pr-1"></i> All Appointments</Link>
+            </div>
+            <div className="card-body dz-scroll">
+              {
+                appointment.length ? (
+                  appointment.slice().reverse().map((item, i) => (
+                    <div className={`media mb-3 align-items-start bg-white border-bottom ${isDatePassed(item.slot_date) ? 'disable' : ''}`} key={i}>
+                      <img className="mr-3 p-2 border" alt="image" width="40" src="/assets/images/icons/21.png" />
+                      <div className="media-body">
+                        <h5 className="mt-0 mb-1 text-pale-sky">Doctor Name: {item.doctor.user.first_name} {item.doctor.user.last_name}</h5>
+                        <span className="text-muted mb-0">Email: {item.doctor.user.email}</span>
+                        <h5 className="mt-0 mb-1 text-pale-sky">Date: {item.slot_date}</h5>
+                        <span className="text-muted mb-0">Time: {item.slot_start_time} - {item.slot_end_time}</span><br />
+                        <span className="mb-0 text-pale-sky"><strong>Specialization:</strong> -{item.doctor.specialization}</span><br />
+                        <span className="mb-0 text-pale-sky"><strong>Experience:</strong> -{item.doctor.experience}</span>
+                        <p dangerouslySetInnerHTML={{ __html: item.description }}></p>
+
+                        <div className="footer-btn">
+                          <Link href={`/dashboard/appointments/${item.id}?docId=${id}`} className="btn btn-info btn-rounded mb-2"><i className="icon-eye"></i> View</Link>
+                          <Link href={`${id}/prescription?appId=${item.id}`} className="btn btn-primary btn-rounded mb-2 mx-1"><i className="fa fa-medkit"></i> Add Prescription</Link>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <h5>No Appointments Available!!!</h5>
+                )
+              }
             </div>
           </div>
         </div>

@@ -13,7 +13,9 @@ const Slot = () => {
     const id = params.id
     const [data, setData] = useState([]);
     const [deleteContent, setDeleteContent] = useState(false);
+    const [minDate, setMinDate] = useState('');
     const [deleteId, setDeleteId] = useState('');
+    const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
     const [cookies] = useCookies(['access_token']);
     const token = cookies.access_token;
@@ -49,6 +51,16 @@ const Slot = () => {
         setDeleteId(row.original.id);
     }
 
+    const isDatePassed = (dateString) => {
+        const currentDate = new Date();
+        const expireDate = new Date(dateString);
+        expireDate.setDate(expireDate.getDate() + 1);
+        expireDate.setHours(23, 59, 59, 999);
+        return currentDate > expireDate;
+    };
+
+
+
     const columns = useMemo(
         () => [
             {
@@ -58,8 +70,15 @@ const Slot = () => {
             },
             {
                 accessorKey: 'slot_date',
-                header: 'Slot Date',
+                header: 'Day and Date',
                 size: 100,
+                Cell: ({ row }) => {
+                    const currentDate = new Date(row.original.slot_date);
+                    const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+                    return (
+                        <span>{row.original.slot_date} - <strong>{dayName}</strong></span>
+                    );
+                },
             },
             {
                 accessorKey: 'slot_start_time',
@@ -91,7 +110,7 @@ const Slot = () => {
                 Cell: ({ row }) => (
                     <div>
                         <Link href={`/dashboard/doctors/${id}/slot/${row.original.id}`} className='btn rounded btn-primary'><i className="icon-eye"></i></Link>
-                        <Link href={`/dashboard/doctors/${id}/slot/edit/${row.original.id}`} className='btn rounded btn-info mx-1'><i className="icon-pencil"></i></Link>
+                        <Link href={`/dashboard/doctors/${id}/slot/edit/${row.original.id}`} className={`btn rounded btn-info mx-1 ${isDatePassed(row.original.slot_date) ? 'disabled' : ''}`}><i className="icon-pencil"></i></Link>
                         <button className='btn rounded btn-danger' onClick={() => handleDeletePopup(row)}><i className="icon-trash"></i></button>
                     </div>
                 ),
@@ -101,6 +120,34 @@ const Slot = () => {
     );
 
     const table = useMaterialReactTable({ columns, data: data || [] });
+
+    const handleDateSearch = (e) => {
+        setSearch(e.target.value);
+    }
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res = await FetchData({ url: `app/all_slot/${id}/${search}`, method: "GET", authorization: `Bearer ${token}` });
+
+                if (!res.ok) {
+                    throw new Error('Failed to fetch data');
+                }
+
+                const result = await res.json();
+
+                setData(result.data);
+                setLoading(false);
+            } catch (error) {
+                console.error('Error fetching data:', error.message);
+                setLoading(false);
+            }
+        };
+
+        if (search) {
+            fetchData();
+        }
+    }, [search]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -113,8 +160,10 @@ const Slot = () => {
 
                 const result = await res.json();
 
-                // Update the state with result.data
-                setData(result.data);
+                const todayDate = new Date().toISOString().split('T')[0];
+                const filteredData = result.data.filter(item => item.slot_date >= todayDate);
+
+                setData(filteredData);
                 setLoading(false);
             } catch (error) {
                 console.error('Error fetching data:', error.message);
@@ -126,6 +175,10 @@ const Slot = () => {
 
     }, [token, deleteContent]);
 
+    useEffect(() => {
+        setMinDate(new Date().toISOString().split('T')[0]);
+    }, []);
+
     if (loading) {
         return <Loading />;
     }
@@ -135,7 +188,7 @@ const Slot = () => {
             <div className="row page-titles mx-0">
                 <div className="col-sm-6">
                     <div className="welcome-text">
-                        <h4>All Slots</h4>
+                        <h4>All Slots ({data.length})</h4>
                     </div>
                 </div>
                 <div className="col-sm-6 justify-content-sm-end mt-2 mt-sm-0 d-flex">
@@ -152,7 +205,11 @@ const Slot = () => {
                     <div className="card">
                         <div className="card-header">
                             <h4 className="card-title">Slots Details Lists</h4>
-                            <div className="add-new text-right">
+                            <div className="add-new text-right form-filter-date">
+                                <div className={data.length == 0 ? 'd-none' : 'form-date'}>
+                                    <label htmlFor="date">Filter by Date</label>
+                                    <input type="date" name="date" id="date" onChange={handleDateSearch} className='form-control' min={minDate} />
+                                </div>
                                 <Link href={`/dashboard/doctors/${id}/slot/add`} className="btn btn-outline-primary btn-lg btn-rounded mt-1 pl-5 pr-5 add-new">Add New</Link>
                             </div>
                         </div>

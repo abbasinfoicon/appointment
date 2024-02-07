@@ -19,6 +19,13 @@ const SlotDetail = () => {
   const [deleteContent, setDeleteContent] = useState(false);
   const [deleteId, setDeleteId] = useState('');
 
+  const isDatePassed = (dateString) => {
+    const currentDate = new Date();
+    const expireDate = new Date(dateString);
+    expireDate.setDate(expireDate.getDate() + 1);
+    expireDate.setHours(23, 59, 59, 999);
+    return currentDate > expireDate;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,6 +88,7 @@ const SlotDetail = () => {
                 <li className="list-group-item d-flex justify-content-between"><span className="mb-0">Slot ID</span> {data?.id}</li>
                 <li className="list-group-item d-flex justify-content-between"><span className="mb-0">Doctor ID</span> {data?.doctor}</li>
                 <li className="list-group-item d-flex justify-content-between"><span className="mb-0">Slot Date</span> {data?.slot_date}</li>
+                <li className={`list-group-item d-flex justify-content-between ${isDatePassed(data?.slot_date) ? 'bg-warning' : ''}`}><span className="mb-0">Status</span> {isDatePassed(data?.slot_date) ? 'Expire Slot' : 'Active'}</li>
                 <li className="list-group-item d-flex justify-content-between"><span className="mb-0">Start Time</span> {data?.slot_start_time}</li>
                 <li className="list-group-item d-flex justify-content-between"><span className="mb-0">End Time</span> {data?.slot_end_time}</li>
                 <li></li>
@@ -90,7 +98,7 @@ const SlotDetail = () => {
 
             <div className="card-footer border-0 mt-0 text-center">
               <Link className="btn btn-primary btn-rounded pl-3 pr-3" href={`/dashboard/doctors/${data?.doctor}/slot`} ><i className="icon-list pr-1"></i>All View Slot</Link>
-              <Link className="btn btn-info btn-rounded pl-3 pr-3 mx-2" href={`/dashboard/doctors/${data?.doctor}/slot/edit/${id}`}><i className="icon-pencil pr-1"></i> Edit </Link>
+              <Link className={`btn btn-info btn-rounded pl-3 pr-3 mx-2 ${isDatePassed(data?.slot_date) ? 'disabled' : ''}`} href={`/dashboard/doctors/${data?.doctor}/slot/edit/${id}`}><i className="icon-pencil pr-1"></i> Edit </Link>
               <button className='btn btn-rounded btn-danger' onClick={() => handleDeletePopup(id)}><i className="icon-trash pr-1"></i> Delete</button>
             </div>
           </div>

@@ -1,7 +1,42 @@
+"use client"
+import FetchData from '@/app/components/FetchData';
+import Loading from '@/app/loading';
 import Link from 'next/link'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { useCookies } from 'react-cookie';
 
 const Appointment = () => {
+    const [data, setData] = useState();
+    const [loading, setLoading] = useState(true);
+    const [cookies] = useCookies(['access_token']);
+    const token = cookies.access_token;
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res = await FetchData({ url: "app/appointments", method: "GET", authorization: `Bearer ${token}`, contentType: "application/json" });
+
+                if (!res.ok) {
+                    throw new Error('Failed to fetch data');
+                }
+
+                const result = await res.json();
+                setData(result.data);
+                setLoading(false);
+            } catch (error) {
+                console.error('Error fetching data:', error.message);
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+
+    }, [token]);
+
+    if (loading) {
+        return <Loading />;
+    }
+
     return (
         <div className="dashboard_content">
             <div className="banner_class">
@@ -16,7 +51,7 @@ const Appointment = () => {
             <div className="appointment_history">
                 <div className="table-responsive">
                     <table className="table">
-                        <tbody>
+                        <thead>
                             <tr>
                                 <th className="sn">
                                     SN
@@ -41,6 +76,9 @@ const Appointment = () => {
                                     Action
                                 </th>
                             </tr>
+                        </thead>
+
+                        <tbody>
                             <tr className="tabile_row">
                                 <td className="sn">
                                     <p>1</p>

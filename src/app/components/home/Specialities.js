@@ -49,7 +49,7 @@ const Specialities = () => {
                             data.length ? data.slice(0, 6).map((item, i) => {
                                 return (
                                     <div className="col-lg-4 col-md-6 col-sm-6 m-b30" key={i}>
-                                        <div className="dez-box">
+                                        <div className="dez-box specialities-box">
                                             <div className="dez-media"> <Link href={`/specialities/${item.service_id}`}><img src={process.env.BASE_URL + item.image} alt="" /></Link> </div>
                                             <div className="dez-info p-a30 border-1">
                                                 <h4 className="dez-title m-t0"><Link href={`/specialities/${item.service_id}`}>{item.title}</Link></h4>

@@ -8,6 +8,7 @@ import DeleteModal from '../../components/DeleteModal';
 
 const Patients = () => {
   const [data, setData] = useState({});
+  const [appointmentData, setAppointmentData] = useState([]);
   const [cookies] = useCookies(['access_token']);
   const token = cookies.access_token;
   const [deleteContent, setDeleteContent] = useState(false);
@@ -16,6 +17,7 @@ const Patients = () => {
   const [filters, setFilters] = useState({ search: '', category: '' });
   const [visiblePosts, setVisiblePosts] = useState(8);
   const [postsIncrement, setPostsIncrement] = useState(4);
+  const dataReverse = Array.isArray(data) ? data.slice().reverse() : [];
 
   const handleDeletePopup = (id) => {
     setDeleteContent(!deleteContent);
@@ -25,13 +27,17 @@ const Patients = () => {
   const fetchData = async () => {
     try {
       const res = await FetchData({ url: "user/all_patient", method: "POST", authorization: `Bearer ${token}` });
+      const appointRes = await FetchData({ url: "app/appointments", method: "GET", authorization: `Bearer ${token}`, contentType: "application/json" });
 
-      if (!res.ok) {
+      if (!res.ok || !appointRes.ok) {
         throw new Error('Failed to fetch data');
       }
 
       const result = await res.json();
+      const appointData = await appointRes.json();
+
       setData(result.data);
+      setAppointmentData(appointData.data);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching data:', error.message);
@@ -39,12 +45,16 @@ const Patients = () => {
     }
   };
 
+  const getAppointmentsForPatient = (patientId) => {
+    return appointmentData.filter(appointment => appointment.patient.id === patientId);
+  };
+
   useEffect(() => {
     fetchData();
   }, [token, deleteContent]);
 
   const filteredData = filters.search || filters.category
-    ? data.filter(item => {
+    ? dataReverse.filter(item => {
       // Check if the properties exist before calling toLowerCase()
       const fnameMatch = item.first_name && item.first_name.toLowerCase().includes(filters.search.toLowerCase());
       const lnameMatch = item.last_name && item.last_name.toLowerCase().includes(filters.search.toLowerCase());
@@ -53,7 +63,7 @@ const Patients = () => {
       return fnameMatch || lnameMatch;
       // Add more conditions for additional filters as needed
     })
-    : data;
+    : dataReverse;
 
   const showMore = () => {
     setVisiblePosts(prevVisiblePosts => prevVisiblePosts + postsIncrement);
@@ -68,7 +78,7 @@ const Patients = () => {
       <div className="row page-titles mx-0">
         <div className="col-sm-6">
           <div className="welcome-text">
-            <h4>All Patient</h4>
+            <h4>All Patient ({data.length})</h4>
           </div>
         </div>
         <div className="col-sm-6 justify-content-sm-end mt-2 mt-sm-0 d-flex">
@@ -92,7 +102,7 @@ const Patients = () => {
 
         <div className="col-sm-2">
           <div className="add-new text-right">
-            <Link href="/dashboard/patients/add-patient" className="btn btn-outline-primary btn-lg btn-rounded mt-1 pl-5 pr-5 add-new">Add New</Link>
+            <Link href="/dashboard/patients/add" className="btn btn-outline-primary btn-lg btn-rounded mt-1 pl-5 pr-5 add-new">Add New</Link>
           </div>
         </div>
       </div>
@@ -100,17 +110,19 @@ const Patients = () => {
       <div className="row">
         {
           data.length > 0 ?
-            filteredData.slice(0, visiblePosts).map((item, index) => {
+            filteredData.slice(0, visiblePosts).map((item) => {
               return (
-                <div className="col-xl-3 col-lg-3 col-md-6" key={index}>
+                <div className="col-xl-3 col-lg-3 col-md-6" key={item.id}>
                   <div className="card">
-                    <div className="text-center py-4 px-5 overlay-box" style={{ backgroundImage: 'url(/assets/images/big/img1.jpg)' }}>
+                    <div className="text-center py-4 px-5 overlay-box pos-rel" style={{ backgroundImage: 'url(/assets/images/big/img1.jpg)' }}>
                       <div className="profile-photo">
                         <img src={`/assets/images/patients/patient${item.gender === "Male" ? "2" : "1"}.png`} width="100" className="img-fluid rounded-circle" alt="" />
                       </div>
 
                       <h3 className="mt-3 mb-1 text-white">{item.first_name} {item.last_name}</h3>
                       <p className="text-white mb-0">{item.email}</p>
+                      {getAppointmentsForPatient(item.id).length ? <Link className="appointment" href={`/dashboard/patients/${item.id}/appointment`}><i className="fa fa-calendar"></i> <span>{getAppointmentsForPatient(item.id).length}</span></Link> : null}
+
                     </div>
 
                     <ul className="list-group list-group-flush">

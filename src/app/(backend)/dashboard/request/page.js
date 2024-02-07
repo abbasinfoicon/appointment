@@ -99,8 +99,9 @@ const Request = () => {
                 header: 'Actions',
                 size: 150,
                 Cell: ({ row }) => (
-                    <div>
-                        <Link href={`request/${row.original.request_id}`} className='btn rounded btn-primary'><i className="icon-eye"></i></Link>
+                    <div className='d-flex'>
+                        <Link href={`/dashboard/appointments/add?id=${row.original.request_id}`} className='btn rounded btn-primary'><i className="fa fa-calendar"></i></Link>
+                        <Link href={`request/${row.original.request_id}`} className='btn rounded btn-primary mx-1'><i className="icon-eye"></i></Link>
                         <Link href={`request/edit/${row.original.request_id}`} className='btn rounded btn-info mx-1'><i className="icon-pencil"></i></Link>
                         <button className='btn rounded btn-danger' onClick={() => handleDeletePopup(row)}><i className="icon-trash"></i></button>
                     </div>
@@ -145,7 +146,7 @@ const Request = () => {
             <div className="row page-titles mx-0">
                 <div className="col-sm-6">
                     <div className="welcome-text">
-                        <h4>All Requests</h4>
+                        <h4>All Requests ({data.length})</h4>
                     </div>
                 </div>
                 <div className="col-sm-6 justify-content-sm-end mt-2 mt-sm-0 d-flex">

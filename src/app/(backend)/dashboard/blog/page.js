@@ -4,13 +4,18 @@ import React from 'react'
 import BlogList from './BlogList';
 
 const Blog = () => {
+  const [dataLength, setDataLength] = React.useState(0);
+
+  const handleDataChange = (data) => {
+    setDataLength(data.length);
+  };
 
   return (
     <div className="container-fluid">
       <div className="row page-titles mx-0">
         <div className="col-sm-6">
           <div className="welcome-text">
-            <h4>All Blogs</h4>
+            <h4>All Blogs  ({dataLength})</h4>
           </div>
         </div>
         <div className="col-sm-6 justify-content-sm-end mt-2 mt-sm-0 d-flex">
@@ -27,12 +32,12 @@ const Blog = () => {
             <div className="card-header">
               <h4 className="card-title">Blogs Details Lists</h4>
               <div className="add-new text-right">
-                <Link href="/dashboard/blog/add-blog" className="btn btn-outline-primary btn-lg btn-rounded mt-1 pl-5 pr-5 add-new">Add New</Link>
+                <Link href="/dashboard/blog/add" className="btn btn-outline-primary btn-lg btn-rounded mt-1 pl-5 pr-5 add-new">Add New</Link>
               </div>
             </div>
 
             <div className='card-body'>
-              <BlogList />
+              <BlogList onDataChange={handleDataChange} />
             </div>
           </div>
         </div>

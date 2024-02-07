@@ -1,6 +1,6 @@
 'use client'
 import Loading from '@/app/loading';
-import { useGetAllDoctorQuery, useGetAllUserQuery } from '@/redux/slices/serviceApi';
+import { useGetAllUserQuery } from '@/redux/slices/serviceApi';
 import Link from 'next/link'
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react'
@@ -10,13 +10,9 @@ const Header = () => {
     const [cookies, , removeCookie] = useCookies(['access_token']);
     const token = cookies.access_token;
     const router = useRouter();
-    const role = cookies.role;
 
     const { data = [], isLoading, isFetching, isError } = useGetAllUserQuery(token);
     const user = data.data;
-
-    const doctor = useGetAllDoctorQuery();
-    const docList = doctor?.data;
 
     const [isActive, setIsActive] = useState(false);
     const [openNote, setOpenNote] = useState(false);
@@ -65,12 +61,12 @@ const Header = () => {
                 </div>
             </div>
 
-            <div className="header">
+            <div className="header ">
                 <div className="header-content">
                     <nav className="navbar navbar-expand">
                         <div className="collapse navbar-collapse justify-content-between">
                             <div className="header-left">
-                                <div className="search_bar dropdown">
+                                <div className="search_bar dropdown d-none">
                                     <span className="search_icon p-3 c-pointer" data-toggle="dropdown">
                                         <i className="mdi mdi-magnify"></i>
                                     </span>
@@ -82,7 +78,7 @@ const Header = () => {
                                 </div>
                             </div>
 
-                            <ul className="navbar-nav header-right">
+                            <ul className="navbar-nav header-right align-items-center">
                                 <li className={`nav-item dropdown notification_dropdown ${openNote ? 'show' : ''}`}>
                                     <Link className="nav-link bell ai-icon" href="#" onClick={openNotification}>
                                         <i className="icon-bell"></i>
@@ -158,11 +154,13 @@ const Header = () => {
                                             <i className="icon-envelope-open"></i>
                                             <span className="ml-2">Inbox </span>
                                         </Link>
-                                        <button className="dropdown-item ai-icon" onClick={removeCookies}>
-                                            <i className="icon-logout"></i>
-                                            <span className="ml-2">Logout </span>
-                                        </button>
                                     </div>
+                                </li>
+                                <li className='logout'>
+                                    <button className="logout-btn ai-icon" onClick={removeCookies}>
+                                        <i className="icon-logout"></i>
+                                        <span className="ml-2">Logout </span>
+                                    </button>
                                 </li>
                             </ul>
                         </div>

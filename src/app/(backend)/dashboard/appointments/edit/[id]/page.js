@@ -4,13 +4,15 @@ import React, { useEffect, useState } from 'react'
 import FetchData from '@/app/components/FetchData';
 import { useCookies } from 'react-cookie';
 import { toast } from 'react-toastify';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useGetAllDoctorQuery, useGetSlotByDrQuery } from '@/redux/slices/serviceApi';
 import JEditor from '@/app/(backend)/components/JEditor';
 
 const Edit = () => {
   const params = useParams();
   const id = params.id;
+  const searchParams = useSearchParams();
+  const docId = searchParams.get('docId');
   const router = useRouter();
   const [data, setData] = useState({ slot_date: '', slot_start_time: '', slot_end_time: '', doctor: '', patient: '', description: '' });
   const [content, setContent] = useState('');
@@ -120,7 +122,8 @@ const Edit = () => {
         </div>
         <div className="col-sm-6 justify-content-sm-end mt-2 mt-sm-0 d-flex">
           <ol className="breadcrumb">
-            <li className="breadcrumb-item"><Link href="/dashboard/appointments">Appointments</Link></li>
+            {docId === null ? null : <li className="breadcrumb-item"><Link href="/dashboard/doctors">Doctors</Link></li>}
+            <li className="breadcrumb-item"><Link href={`/dashboard/${docId === null ? 'appointments' : `doctors/${docId}/appointment`}`}>Appointment</Link></li>
             <li className="breadcrumb-item active"><Link href="#">Update Appointments</Link></li>
           </ol>
         </div>

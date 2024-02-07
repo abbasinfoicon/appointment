@@ -2,7 +2,7 @@
 import FetchData from '@/app/components/FetchData'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useCookies } from 'react-cookie'
 import { toast } from 'react-toastify'
 
@@ -11,6 +11,7 @@ const Add = () => {
   const id = params.id
   const router = useRouter();
   const [data, setData] = useState({ slot_date: "", slot_start_time: "", slot_end_time: "" });
+  const [minDate, setMinDate] = useState('');
   const [cookies, setCookie, removeCookies] = useCookies(['access_token']);
   const token = cookies.access_token;
 
@@ -41,14 +42,18 @@ const Add = () => {
         setData({ slot_date: "", slot_start_time: "", slot_end_time: "" });
         toast.success("Slot added !!!");
       } else {
-        toast.error(res.title[0]); 
+        toast.error(res.title[0]);
       }
 
     } catch (error) {
-      console.error("Slot not added !!!", error);  
-      toast.error("Slot not added !!!"); 
+      console.error("Slot not added !!!", error);
+      toast.error("Slot not added !!!");
     }
   }
+
+  useEffect(() => {
+    setMinDate(new Date().toISOString().split('T')[0]);
+  }, []);
 
   return (
     <div className="container-fluid">
@@ -77,7 +82,7 @@ const Add = () => {
                       <div className="col-md-12">
                         <div className="form-group">
                           <label className="form-label">Slot Date</label>
-                          <input type="date" name='slot_date' value={data.slot_date} onChange={handleChange} className="form-control" />
+                          <input type="date" name='slot_date' value={data.slot_date} onChange={handleChange} className="form-control" min={minDate} />
                         </div>
                       </div>
 

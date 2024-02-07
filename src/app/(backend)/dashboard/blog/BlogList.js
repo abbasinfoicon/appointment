@@ -8,7 +8,7 @@ import Loading from '@/app/loading';
 import { toast } from 'react-toastify';
 import DeleteModal from '../../components/DeleteModal';
 
-const BlogList = () => {
+const BlogList = ({ onDataChange }) => {
     const [data, setData] = useState([]);
     const [deleteContent, setDeleteContent] = useState(false);
     const [deleteId, setDeleteId] = useState('');
@@ -182,6 +182,7 @@ const BlogList = () => {
 
                 // Update the state with result.data
                 setData(result.data);
+                onDataChange(result.data);
                 setLoading(false);
             } catch (error) {
                 console.error('Error fetching data:', error.message);

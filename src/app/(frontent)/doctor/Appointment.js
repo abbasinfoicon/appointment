@@ -7,13 +7,14 @@ import React, { useEffect, useState } from 'react'
 import { useCookies } from 'react-cookie';
 import { toast } from 'react-toastify';
 
-const Appointment = ({ slot, drId }) => {    
+const Appointment = ({ slot, drId }) => {
     const router = useRouter();
     const [login, setLogin] = useState({ email: "", password: "" });
     const [showPassword, setShowPassword] = useState(false);
     const [detail, setDetail] = useState({});
     const [data, setData] = useState({ name: '', email: '', phone_no: '', slot_date: '', slot_start_time: '', slot_end_time: '', description: '' });
     const [drdate, setDrdate] = useState("");
+    const [drtime, setDrTime] = useState("");
 
     const [cookies, setCookie] = useCookies(['access_token']);
     const token = cookies.access_token;
@@ -41,6 +42,10 @@ const Appointment = ({ slot, drId }) => {
 
     const handleChangeDate = (e) => {
         setDrdate(e.target.value);
+    }
+
+    const handleChangeTime = (e) => {
+        setDrTime(e.target.value);
     }
 
     const formSubmit = async (e) => {
@@ -97,10 +102,10 @@ const Appointment = ({ slot, drId }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const { slot_start_time, slot_end_time, description } = data;
+        const { slot_end_time, description } = data;
 
         try {
-            if (!drdate || !slot_start_time || !slot_end_time || !description) {
+            if (!drdate || !drtime || !slot_end_time || !description) {
                 toast.error("All (*) fields Required!!!");
                 return;
             }
@@ -108,6 +113,7 @@ const Appointment = ({ slot, drId }) => {
             data.patient = patientExit.data?.data?.id;
             data.doctor = drId;
             data.slot_date = drdate;
+            data.slot_start_time = drtime;
             const res = await FetchData({ url: "app/c_appointment", body: data, method: "POST", authorization: `Bearer ${token}`, contentType: "application/json" });
             const result = await res.json();
 
@@ -135,6 +141,9 @@ const Appointment = ({ slot, drId }) => {
     const today = new Date().toISOString().split('T')[0];
     const filteredSlots = slot.filter(item => item.slot_date >= today);
     const unique = filteredSlots.filter(onlyUnique);
+
+    const filteredDate = slot.filter(item => item.slot_date == drdate);
+    const filteredStartTime = filteredDate.filter(item => item.slot_start_time == drtime);
 
     return (
         <div className="make_appointment">
@@ -166,19 +175,19 @@ const Appointment = ({ slot, drId }) => {
                             </div>
 
                             <div className="col-xx-6 col-md-6 col-lg-12">
-                                <select className="reservation_input select_2 form-control" name="slot_start_time" value={data.slot_start_time} onChange={handleChange}>
-                                    <option value="">Select Time</option>
+                                <select className="reservation_input select_2 form-control" name="slot_start_time" value={data.slot_start_time} onChange={(e) => handleChangeTime(e)}>
+                                    <option value="">Start Time</option>
                                     {
-                                        slot ? slot?.map((item, i) => <option key={i} value={item.slot_start_time}>{item.slot_start_time}</option>) : <option value="">Slot Not Avalable</option>
+                                        filteredDate ? filteredDate?.map((item, i) => <option key={i} value={item.slot_start_time}>{item.slot_start_time}</option>) : <option value="">Slot Not Avalable</option>
                                     }
                                 </select>
                             </div>
 
                             <div className="col-xl-12">
                                 <select className="reservation_input select_2 form-control" name="slot_end_time" value={data.slot_end_time} onChange={handleChange}>
-                                    <option value="">Select Time</option>
+                                    <option value="">End Time</option>
                                     {
-                                        slot ? slot?.map((item, i) => <option key={i} value={item.slot_end_time}>{item.slot_end_time}</option>) : <option value="">Slot Not Avalable</option>
+                                        filteredStartTime ? filteredStartTime?.map((item, i) => <option key={i} value={item.slot_end_time}>{item.slot_end_time}</option>) : <option value="">Slot Not Avalable</option>
                                     }
                                 </select>
                             </div>

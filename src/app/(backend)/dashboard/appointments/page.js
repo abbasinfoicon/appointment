@@ -9,10 +9,12 @@ import Loading from '@/app/loading';
 import DeleteModal from '../../components/DeleteModal';
 
 const Appointment = () => {
+  const [originalData, setOriginalData] = useState([]);
   const [data, setData] = useState([]);
   const [deleteContent, setDeleteContent] = useState(false);
   const [deleteId, setDeleteId] = useState('');
   const [search, setSearch] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
   const [loading, setLoading] = useState(true);
   const [cookies] = useCookies(['access_token']);
   const token = cookies.access_token;
@@ -51,6 +53,8 @@ const Appointment = () => {
   const isDatePassed = (dateString) => {
     const currentDate = new Date();
     const expireDate = new Date(dateString);
+    expireDate.setDate(expireDate.getDate());
+    expireDate.setHours(23, 59, 59, 999);
     return currentDate > expireDate;
   };
 
@@ -65,6 +69,14 @@ const Appointment = () => {
       {
         accessorKey: 'slot_date',
         header: 'Appointment Date',
+        Cell: ({ row }) => {
+          const dateObj = new Date(row.original.slot_date);
+          const year = dateObj.getFullYear();
+          const month = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(dateObj);
+          const day = dateObj.getDate();
+          const formattedDate = `${month}-${day}, ${year}`;
+          return <span>{formattedDate} <small className='exp'>{isDatePassed(row.original.slot_date) ? '(EXP)' : null}</small></span>;
+        }
       },
       {
         accessorKey: 'slot_start_time',
@@ -98,7 +110,7 @@ const Appointment = () => {
         size: 50,
         Cell: ({ row }) => {
           return (
-            <span className={`badge badge-rounded badge-${row.original.status == 'Pending' ? 'warning' : 'primary'} badge-${isDatePassed(row.original.slot_date) ? 'danger disabled' : ''}`}>{isDatePassed(row.original.slot_date) ? "Expired" : row.original.status}</span>
+            <span className={`badge badge-rounded badge-${row.original.status == 'Pending' ? 'warning' : row.original.status == 'Canceled' ? 'danger' : 'success'} badge-${isDatePassed(row.original.slot_date) ? 'secondary disabled' : ''}`}>{row.original.status}</span>
           )
         }
       },
@@ -137,6 +149,12 @@ const Appointment = () => {
     enableGlobalFilterModes: true,
     initialState: {
       showGlobalFilter: true,
+      sortBy: [
+        {
+          id: 'updated_at',
+          desc: true,
+        },
+      ],
     },
     positionGlobalFilter: "left",
     muiSearchTextFieldProps: {
@@ -150,6 +168,11 @@ const Appointment = () => {
     setSearch(e.target.value);
   }
 
+  const handleChangeStatus = (e) => {
+    const status = e.target.value;
+    setSelectedStatus(status);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -161,7 +184,6 @@ const Appointment = () => {
 
         const result = await res.json();
 
-        // Update the state with result.data
         setData(result.data);
         setLoading(false);
       } catch (error) {
@@ -185,9 +207,10 @@ const Appointment = () => {
         }
 
         const result = await res.json();
+        const sortedData = result.data.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
 
-        // Update the state with result.data
-        setData(result.data);
+        setOriginalData(sortedData);
+        setData(sortedData);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching data:', error.message);
@@ -199,6 +222,15 @@ const Appointment = () => {
 
   }, [token, deleteContent]);
 
+  useEffect(() => {
+    if (selectedStatus) {
+      const filteredData = originalData.filter(item => item.status === selectedStatus);
+      setData(filteredData);
+    } else {
+      setData(originalData);
+    }
+  }, [selectedStatus, originalData]);
+
   if (loading) {
     return <Loading />;
   }
@@ -208,7 +240,7 @@ const Appointment = () => {
       <div className="row page-titles mx-0">
         <div className="col-sm-6">
           <div className="welcome-text">
-            <h4>All Appointment</h4>
+            <h4>All Appointment ({data.length})</h4>
           </div>
         </div>
         <div className="col-sm-6 justify-content-sm-end mt-2 mt-sm-0 d-flex">
@@ -228,6 +260,12 @@ const Appointment = () => {
                 <div className="form-date">
                   <label htmlFor="date">Filter by Date</label>
                   <input type="date" name="date" id="date" onChange={handleDateSearch} className='form-control' />
+                  <select name="status" id="status" onChange={handleChangeStatus} className="form-control">
+                    <option value="">All Appointment</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="Canceled">Canceled</option>
+                  </select>
                 </div>
                 <Link href="/dashboard/appointments/add" className="btn btn-outline-primary btn-lg btn-rounded mt-1 pl-5 pr-5 add-new">Add New</Link>
               </div>

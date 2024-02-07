@@ -163,7 +163,7 @@ const BlogDetail = () => {
                 <Link href="/dashboard/blog" className='btn rounded btn-primary'><i className="icon-list"></i> All Blog Lists</Link>
                 <Link href={`/dashboard/blog/edit/${data.blog_id}`} className='btn rounded btn-info mx-1'><i className="icon-pencil"></i> Edit</Link>
                 <button className='btn rounded btn-danger' onClick={() => handleDeletePopup(data.blog_id)}><i className="icon-trash"></i> Delete</button>
-                <Link href="/dashboard/blog/add-blog" className='btn rounded btn-primary mx-1'><i className="icon-plus"></i> Add New Blog</Link>
+                <Link href="/dashboard/blog/add" className='btn rounded btn-primary mx-1'><i className="icon-plus"></i> Add New Blog</Link>
               </div>
             </div>
           </div>

@@ -8,6 +8,7 @@ import DeleteModal from '../../components/DeleteModal';
 
 const Doctors = () => {
   const [data, setData] = useState([]);
+  const [appointmentData, setAppointmentData] = useState([]);
   const [cookies] = useCookies(['access_token']);
   const token = cookies.access_token;
 
@@ -17,6 +18,7 @@ const Doctors = () => {
   const [filters, setFilters] = useState({ search: '', category: '' });
   const [visiblePosts, setVisiblePosts] = useState(8);
   const [postsIncrement, setPostsIncrement] = useState(4);
+  const dataReverse = Array.isArray(data) ? data.slice().reverse() : [];
 
   const handleDeletePopup = (id) => {
     setDeleteContent(!deleteContent);
@@ -26,15 +28,19 @@ const Doctors = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await FetchData({ url: "user/doctors", method: "GET", authorization: `Bearer ${token}` });
+        const doctorsRes = await FetchData({ url: "user/doctors", method: "GET", authorization: `Bearer ${token}` });
+        const appointRes = await FetchData({ url: "app/appointments", method: "GET", authorization: `Bearer ${token}`, contentType: "application/json" });
 
-        if (!res.ok) {
+        if (!doctorsRes.ok || !appointRes.ok) {
           throw new Error('Failed to fetch data');
         }
 
-        const result = await res.json();
-        setData(result);
-        setLoading(false); // Set loading to false once data is fetched
+        const doctorsData = await doctorsRes.json();
+        const appointData = await appointRes.json();
+
+        setData(doctorsData);
+        setAppointmentData(appointData.data);
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching data:', error.message);
         setLoading(true);
@@ -44,8 +50,12 @@ const Doctors = () => {
     fetchData();
   }, [token, deleteContent]);
 
+  const getAppointmentsForDoctor = (doctorId) => {
+    return appointmentData.filter(appointment => appointment.doctor.user.id === doctorId);
+  };
+
   const filteredData = filters.search || filters.category
-    ? data.filter(item => {
+    ? dataReverse.filter(item => {
       // Check if the properties exist before calling toLowerCase()
       const fnameMatch = item.user.first_name && item.user.first_name.toLowerCase().includes(filters.search.toLowerCase());
       const lnameMatch = item.user.last_name && item.user.last_name.toLowerCase().includes(filters.search.toLowerCase());
@@ -54,7 +64,7 @@ const Doctors = () => {
       return fnameMatch || lnameMatch;
       // Add more conditions for additional filters as needed
     })
-    : data;
+    : dataReverse;
 
   const showMore = () => {
     setVisiblePosts(prevVisiblePosts => prevVisiblePosts + postsIncrement);
@@ -69,7 +79,7 @@ const Doctors = () => {
       <div className="row page-titles mx-0">
         <div className="col-sm-6">
           <div className="welcome-text">
-            <h4>All Doctors</h4>
+            <h4>All Doctors ({data.length})</h4>
           </div>
         </div>
         <div className="col-sm-6 justify-content-sm-end mt-2 mt-sm-0 d-flex">
@@ -104,7 +114,7 @@ const Doctors = () => {
           filteredData.length > 0 ? filteredData.slice(0, visiblePosts).map((item, i) => (
             <div className="col-xl-4 col-lg-4 col-md-6" key={i}>
               <div className="card">
-                <div className="card-body">
+                <div className="card-body pos-rel">
                   <div className="text-center">
                     <div className="profile-photo eqlHeight">
                       <img src={`${item?.image == null ? "/assets/images/avatar/1.jpg" : item?.image}`} width="100" className="img-fluid rounded-circle" alt="" />
@@ -113,12 +123,14 @@ const Doctors = () => {
                     <p className="text-muted">{item.specialization}</p>
 
                     <div className="action profile-action">
-                      <Link className="btn btn-primary btn-rounded pl-3 pr-3" href={`/dashboard/doctors/${item.user.id}`} ><i className="icon-eye"></i>View</Link>
+                      <Link className="btn btn-primary btn-rounded pl-3 pr-3" href={`/dashboard/doctors/${item.user.id}`} ><i className="icon-eye"></i> View</Link>
                       <Link className="btn btn-info btn-rounded pl-3 pr-3 mx-2" href={`/dashboard/doctors/${item.user.id}/slot`}><i className="icon-clock"></i> Slot </Link>
                       <Link className="btn btn-info btn-rounded pl-3 pr-3 mx-2" href={`/dashboard/doctors/edit/${item.user.id}`}><i className="icon-pencil"></i> Edit </Link>
                       <button className='btn btn-rounded btn-danger' onClick={() => handleDeletePopup(item.user.id)}><i className="icon-trash pr-1"></i> Delete</button>
                     </div>
                   </div>
+                  {getAppointmentsForDoctor(item.user.id).length ? <Link href={`/dashboard/doctors/${item?.user?.id}/appointment`} className="appointment"><i className="fa fa-calendar"></i> <span>{getAppointmentsForDoctor(item.user.id).length}</span></Link> : null}
+
                 </div>
                 <div className="card-footer pt-0 pb-0 text-center">
                   <div className="row">
@@ -154,9 +166,3 @@ const Doctors = () => {
 }
 
 export default Doctors
-
-
-
-
-
-

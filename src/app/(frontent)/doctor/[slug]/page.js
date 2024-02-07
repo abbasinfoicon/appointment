@@ -98,7 +98,7 @@ const page = () => {
                                 <div className="team_details_timeing">
                                     <h5>Opening Time</h5>
                                     {
-                                        filteredSlots.map((item) => {
+                                        filteredSlots.length ? filteredSlots.map((item) => {
                                             const months = [
                                                 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
                                             ];
@@ -114,7 +114,7 @@ const page = () => {
                                                     {formattedDate} <span>{formattedStartTime} - {formattedEndTime}</span>
                                                 </p>
                                             );
-                                        })
+                                        }) : <p>Not Available!!!</p>
                                     }
                                 </div>
                             </div>

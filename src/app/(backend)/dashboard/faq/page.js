@@ -174,7 +174,7 @@ const Faq = () => {
             <div className="row page-titles mx-0">
                 <div className="col-sm-6">
                     <div className="welcome-text">
-                        <h4>All FAQ's</h4>
+                        <h4>All FAQ's ({data.length})</h4>
                     </div>
                 </div>
                 <div className="col-sm-6 justify-content-sm-end mt-2 mt-sm-0 d-flex">

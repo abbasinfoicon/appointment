@@ -58,7 +58,7 @@ const Sidebar = () => {
                             </Link>
                             <ul className="mm-collapse">
                                 <li><Link href="/dashboard/doctors">All Doctors</Link></li>
-                                <li><Link href="/dashboard/doctors/add-doctor">Add Doctor</Link></li>
+                                <li><Link href="/dashboard/doctors/add">Add Doctor</Link></li>
                             </ul>
                         </li>
                     )}
@@ -69,7 +69,7 @@ const Sidebar = () => {
                     </Link>
                         <ul className="mm-collapse">
                             <li><Link href="/dashboard/patients">All Patients</Link></li>
-                            <li><Link href="/dashboard/patients/add-patient">Add Patient</Link></li>
+                            <li><Link href="/dashboard/patients/add">Add Patient</Link></li>
                         </ul>
                     </li>
 
@@ -141,7 +141,7 @@ const Sidebar = () => {
                     </Link>
                         <ul className="mm-collapse">
                             <li><Link href="/dashboard/blog">All Blog</Link></li>
-                            <li><Link href="/dashboard/blog/add-blog">Add Blog</Link></li>
+                            <li><Link href="/dashboard/blog/add">Add Blog</Link></li>
                         </ul>
                     </li>
 

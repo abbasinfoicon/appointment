@@ -3,7 +3,7 @@
 import FetchData from '@/app/components/FetchData';
 import Loading from '@/app/loading';
 import Link from 'next/link'
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react'
 import { useCookies } from 'react-cookie';
 import { useGetAppointmentQuery } from '@/redux/slices/serviceApi';
@@ -12,9 +12,12 @@ import DeleteModal from '@/app/(backend)/components/DeleteModal';
 
 const DoctorDetail = () => {
   const params = useParams();
-  const id = params.id
+  const id = params.id;
+  const searchParams = useSearchParams();
+  const appId = searchParams.get('appId');
 
   const [data, setData] = useState({});
+  const [prescription, setPrescription] = useState({});
   const [slot, setSlot] = useState([]);
   const [cookies] = useCookies(['access_token']);
   const token = cookies.access_token;
@@ -51,14 +54,18 @@ const DoctorDetail = () => {
     const fetchData = async () => {
       try {
         const res = await FetchData({ url: `app/all_slot_v/${id}`, method: "POST" });
+        const resPre = await FetchData({ url: "app/prescriptions", method: "GET", authorization: `Bearer ${token}` });
 
-        if (!res.ok) {
+        if (!res.ok || !resPre) {
           throw new Error('Failed to fetch data');
         }
 
         const result = await res.json();
+        const resultPre = await resPre.json();
 
-        // Update the state with result.data
+        const filterApp = resultPre.filter(item => item.appointment_id.id == appId && item.appointment_id.doctor.user.id == id);
+        setPrescription(filterApp);
+
         setSlot(result.data);
         setLoading(false);
       } catch (error) {
@@ -69,7 +76,7 @@ const DoctorDetail = () => {
 
     fetchData();
 
-  }, [token, deleteContent]);
+  }, [token, deleteContent, id]);
 
   useEffect(() => {
     if (allAppointment.status === "fulfilled" && allAppointment.data) {
@@ -88,12 +95,17 @@ const DoctorDetail = () => {
   const isDatePassed = (dateString) => {
     const currentDate = new Date();
     const expireDate = new Date(dateString);
+    expireDate.setDate(expireDate.getDate() + 1);
+    expireDate.setHours(23, 59, 59, 999);
     return currentDate > expireDate;
   };
 
   if (loading) {
     return <Loading />;
   }
+
+  console.log("ID:", id)
+  console.log("asdfdsaf:", prescription)
 
   return (
 
@@ -173,7 +185,7 @@ const DoctorDetail = () => {
             <div className="card-header">
               <h4 className="card-title">Slot Lists</h4>
 
-              <Link className="btn btn-info btn-rounded pl-3 pr-3" href={`/dashboard/doctors/${data?.user?.id}/slot`}><i className="icon-clock pr-1"></i> All Slot </Link>
+              <Link className="btn btn-info btn-rounded pl-3 pr-3" href={`${data?.user?.id}/slot`}><i className="icon-clock pr-1"></i> All Slot </Link>
             </div>
 
             <div className="card-body dz-scroll">
@@ -208,20 +220,31 @@ const DoctorDetail = () => {
           <div className="card card-custom">
             <div className="card-header">
               <h4 className="card-title">Appointment Lists</h4>
+
+              <Link className="btn btn-info btn-rounded pl-3 pr-3" href={`${id}/appointment`}><i className="icon-docs pr-1"></i> All Appointments</Link>
             </div>
             <div className="card-body dz-scroll">
               {
                 appointment.length ? (
                   appointment.slice().reverse().map((item, i) => (
-                    <div className="media mb-3 align-items-start bg-white" key={i}>
+                    <div className={`media mb-3 align-items-start bg-white border-bottom ${isDatePassed(item.slot_date) ? 'disable' : ''}`} key={i}>
                       <img className="mr-3 p-2 border" alt="image" width="40" src="/assets/images/icons/21.png" />
                       <div className="media-body">
-                        <h5 className="mt-0 mb-1 text-pale-sky">{item.patient.first_name} {item.patient.last_name}</h5>
-                        <span className="text-muted mb-0">{item.created_by}</span>
-                        <h5 className="mt-0 mb-1 text-pale-sky">{item.slot_date}</h5>
-                        <span className="text-muted mb-0">{item.slot_start_time} - {item.slot_end_time}</span><br />
+                        <h5 className="mt-0 mb-1 text-pale-sky">Patient Name: {item.patient.first_name} {item.patient.last_name}</h5>
+                        <span className="text-muted mb-0">Create by: {item.created_by}</span>
+                        <h5 className="mt-0 mb-1 text-pale-sky">Date: {item.slot_date}</h5>
+                        <span className="text-muted mb-0">Time: {item.slot_start_time} - {item.slot_end_time}</span><br />
                         <span className="mb-0 text-pale-sky"><strong>Phone:</strong> -{item.patient.phone_no}</span>
-                        <p>{item.description}</p>
+                        <p dangerouslySetInnerHTML={{ __html: item.description }}></p>
+
+                        <div className="footer-btn">
+                          <Link href={`/dashboard/appointments/${item.id}?docId=${id}`} className="btn btn-info btn-rounded mb-2"><i className="icon-eye"></i> View</Link>
+                          <Link href={`${id}/prescription?appId=${item.id}`} className="btn btn-primary btn-rounded mb-2 mx-1"><i className="fa fa-medkit"></i> Add Prescription</Link>
+                        </div>
+                      </div>
+
+                      <div className="media-right">
+                        <p className={`btn btn-${item.status === 'Pending' ? 'warning' : item.status === 'Confirmed' ? 'success' : 'danger'}`}>{item.status}</p>
                       </div>
                     </div>
                   ))

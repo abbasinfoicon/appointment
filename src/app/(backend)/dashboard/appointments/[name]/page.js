@@ -4,18 +4,20 @@ import DeleteModal from '@/app/(backend)/components/DeleteModal';
 import FetchData from '@/app/components/FetchData';
 import Loading from '@/app/loading';
 import Link from 'next/link'
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react'
 import { useCookies } from 'react-cookie';
 
 const AppointmentDetails = () => {
   const params = useParams();
-  const name = params.name
+  const name = params.name;
+  const searchParams = useSearchParams();
+  const docId = searchParams.get('docId');
 
   const [data, setData] = useState({});
+  const [prescription, setPrescription] = useState([]);
   const [cookies] = useCookies(['access_token']);
   const token = cookies.access_token;
-  const role = cookies.role;
   const [loading, setLoading] = useState(true);
   const [deleteContent, setDeleteContent] = useState(false);
   const [deleteId, setDeleteId] = useState('');
@@ -25,13 +27,20 @@ const AppointmentDetails = () => {
     const fetchData = async () => {
       try {
         const res = await FetchData({ url: `app/appointment/${name}`, method: "GET", authorization: `Bearer ${token}` });
+        const pre = await FetchData({ url: `app/prescriptions`, method: "GET", authorization: `Bearer ${token}` });
 
-        if (!res.ok) {
+        if (!res.ok || !pre.ok) {
           throw new Error('Failed to fetch data');
         }
 
         const result = await res.json();
         setData(result.data);
+
+        const appointment_id = result.data.id;
+        const preRes = await pre.json();
+        const filteredData = preRes.filter(item => item.appointment_id.id === appointment_id);
+        setPrescription(filteredData);
+
         setLoading(false);
       } catch (error) {
         console.error('Error fetching data:', error.message);
@@ -53,8 +62,10 @@ const AppointmentDetails = () => {
 
   const isDatePassed = (dateString) => {
     const currentDate = new Date();
-    const appointmentDate = new Date(dateString);
-    return currentDate > appointmentDate;
+    const expireDate = new Date(dateString);
+    expireDate.setDate(expireDate.getDate() + 1);
+    expireDate.setHours(23, 59, 59, 999);
+    return currentDate > expireDate;
   };
 
   return (
@@ -68,14 +79,15 @@ const AppointmentDetails = () => {
         </div>
         <div className="col-sm-6 justify-content-sm-end mt-2 mt-sm-0 d-flex">
           <ol className="breadcrumb">
-            <li className="breadcrumb-item"><Link href="/dashboard/appointments">Appointment</Link></li>
+            {docId === null ? null : <li className="breadcrumb-item"><Link href="/dashboard/doctors">Doctors</Link></li>}
+            <li className="breadcrumb-item"><Link href={`/dashboard/${docId === null ? 'appointments' : `doctors/${docId}/appointment`}`}>Appointment</Link></li>
             <li className="breadcrumb-item active"><Link href="#">Appointment Details</Link></li>
           </ol>
         </div>
       </div>
 
       <div className="row">
-        <div className="col-xl-4 col-xxl-6 col-lg-6 col-md-12">
+        <div className={`${docId === null ? 'col-xl-4' : 'd-none'} col-xxl-6 col-lg-6 col-md-12`}>
           <div className="card card-custom">
             <div className="text-center p-3 overlay-box" style={{ backgroundImage: 'url(/assets/images/big/img5.jpg)' }}>
               <img src={`${data?.doctor?.image == null ? "/assets/images/avatar/1.jpg" : process.env.BASE_URL + data?.doctor?.image}`} width="100" className="img-fluid rounded-circle mt-2 h-100px" alt="" />
@@ -118,6 +130,8 @@ const AppointmentDetails = () => {
                 <p dangerouslySetInnerHTML={{ __html: data?.doctor?.brief_description }}></p>
               </div>
             </div>
+
+            <Link href={`/dashboard/doctors/${data.doctor.user.id}`} className={`btn btn-primary btn-rounded pl-3 pr-3`}>Show Details</Link>
           </div>
         </div>
 
@@ -149,10 +163,12 @@ const AppointmentDetails = () => {
                 <p dangerouslySetInnerHTML={{ __html: data.description }}></p>
               </div>
             </div>
+
+            <Link href={`/dashboard/patients/${data.patient.id}`} className={`btn btn-primary btn-rounded pl-3 pr-3`}>Show Details</Link>
           </div>
         </div>
 
-        <div className="col-xl-4 col-xxl-6 col-lg-6 col-md-12">
+        <div className={`${docId === null ? 'col-xl-4' : 'col-xl-8'} col-xxl-6 col-lg-6 col-md-12`}>
           <div className="card">
             <div className="card-header">
               <h4 className="card-title">Appointment Timeline</h4>
@@ -178,10 +194,10 @@ const AppointmentDetails = () => {
                   </li>
 
                   <li>
-                    <div className="timeline-badge danger"></div>
+                    <div className={`timeline-badge ${data.status == 'Confirmed' ? 'success' : 'danger'}`}></div>
                     <div className="timeline-panel text-muted">
                       <span>{isDatePassed(data.slot_date) ? "Expired" : data.status}</span>
-                      <h6 className="m-t-5">Appointment Not Completed</h6>
+                      <h6 className="m-t-5">Appointment {data.status == 'Confirmed' ? '' : 'Not'} Completed</h6>
                     </div>
                   </li>
 
@@ -196,7 +212,15 @@ const AppointmentDetails = () => {
                   <li>
                     <div className="timeline-badge dark"></div>
                     <div className="timeline-panel text-muted">
-                      <span>{data.updated_at}</span>
+                      <span>
+                        <strong>Updated: </strong>
+                        {(() => {
+                          const updatedAtDate = new Date(data.updated_at);
+                          const formattedUpdatedAt = `${updatedAtDate.toLocaleDateString()}, ${updatedAtDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+                          return formattedUpdatedAt;
+                        })()}
+                      </span>
                       <h6 className="m-t-5">Updated Time</h6>
                     </div>
                   </li>
@@ -205,14 +229,45 @@ const AppointmentDetails = () => {
             </div>
 
             <div className="card-footer border-0 mt-0 text-center">
-              <Link className="btn btn-primary btn-rounded pl-3 pr-3" href={`/dashboard/appointments`} ><i className="icon-list pr-1"></i>All View Appointments</Link>
-              <Link className={`btn btn-info btn-rounded pl-3 pr-3 mx-2 ${isDatePassed(data.slot_date) ? 'disabled' : ''}`} href={`/dashboard/appointments/edit/${data.id}`}><i className="icon-pencil pr-1"></i> Edit </Link>
-              <button className='btn btn-rounded btn-danger' onClick={() => handleDeletePopup(data.id)}><i className="icon-trash pr-1"></i> Delete</button>
+              <Link className="btn btn-primary btn-rounded pl-3 pr-3" href={`/dashboard/${docId === null ? 'appointments' : `doctors/${docId}/appointment`}`}><i className="icon-list pr-1"></i>All View Appointments</Link>
+              <Link className={`${docId === null ? 'd-none' : 'btn btn-info btn-rounded pl-3 pr-3 mx-2'} ${isDatePassed(data.slot_date) ? 'disabled' : ''}`} href={`/dashboard/appointments/edit/${data.id}`}><i className="icon-pencil pr-1"></i> Edit </Link>
+              <button className={docId === null ? 'd-none' : 'btn btn-rounded btn-danger'} onClick={() => handleDeletePopup(data.id)}><i className="icon-trash pr-1"></i> Delete</button>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-header">
+              <h4 className="card-title">Prescription Details</h4>
+            </div>
+
+            <div className="card-body">
+              <div className="widget-prescription ps ps--active-y">
+                {
+                  prescription.length ? prescription.map((item) => {
+                    const updatedAtDate = new Date(item.updated_at);
+                    const formattedUpdatedAt = `${updatedAtDate.toLocaleDateString()}, ${updatedAtDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+                    return (
+                      <>
+                        <p><strong>Prescription: </strong> <span dangerouslySetInnerHTML={{ __html: item.prescription_detail }}></span></p>
+                        <p><strong>Notes: </strong> {item.notes}</p>
+                        <p><strong>Updated: </strong> {formattedUpdatedAt}</p>
+
+                        <div className="footer-btn">
+                          <Link className="btn btn-info btn-rounded pl-3 pr-3 mx-2" href={`/dashboard/doctors/${item.appointment_id.doctor.user.id}/prescription?appId=${item.appointment_id.id}`}><i className="icon-eye pr-1"></i> View </Link>
+                          <Link className={docId === null ? 'd-none' : 'btn btn-info btn-rounded pl-3 pr-3 mx-2'} href={`/dashboard/doctors/${docId}/prescription/edit/${item.id}?appId=${item.appointment_id.id}`}><i className="icon-pencil pr-1"></i> Edit </Link>
+                          <button className={docId === null ? 'd-none' : 'btn btn-rounded btn-danger'} onClick={() => handleDeletePopup(data.id)}><i className="icon-trash pr-1"></i> Delete</button>
+                        </div>
+                      </>
+                    )
+                  }) : <p className='text-center text-muted'>Prescription not added</p>
+                }
+              </div>
             </div>
           </div>
         </div>
 
-        <DeleteModal did={deleteId} dc={deleteContent} setdc={setDeleteContent} page="appointments" url="app/deleteAppointment" />
+        <DeleteModal did={deleteId} dc={deleteContent} setdc={setDeleteContent} page={docId === null ? "appointments" : "/dashboard/doctors/" + docId + "/appointment"} url="app/deleteAppointment" />
       </div>
     </div>
   )

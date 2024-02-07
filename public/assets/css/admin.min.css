@@ -18303,10 +18303,20 @@ Fixing Order => Base + Typography >> General Layout + Grid >> Page Layout + Comp
 
 .badge-dark {
   background-color: #454545;
+  color: #fff;
 }
 
 .badge-light {
   background-color: #f8f9fa;
+}
+
+.badge-secondary {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+.badge-danger.badge-secondary {
+  background-color: #FF1616;
 }
 
 .bootstrap-label .label {
@@ -25330,7 +25340,8 @@ i.big_icon {
   gap: 15px;
 }
 
-.form-filter-date .form-date input {
+.form-filter-date .form-date input,
+.form-filter-date .form-date select {
   border-radius: 35px;
   padding: 0.58rem 1rem;
   min-height: 41.53px;
@@ -25351,13 +25362,107 @@ i.big_icon {
 
 .slot-lists {}
 
-.slot-lists .disable {
+.slot-lists .disable,
+.media.disable {
   opacity: 0.5;
   cursor: no-drop;
 }
+
+.media.disable .media-right a,
+.media.disable .footer-btn a {
+  cursor: no-drop;
+  pointer-events: none;
+}
+
 .card.card-custom.slot-lists .card-body {
   max-height: 420px;
   overflow: hidden;
   overflow-y: auto;
 }
 
+.logout-btn {
+  background: #da3344;
+  color: #fff;
+  padding: 6px 15px;
+  border-radius: 30px;
+}
+
+.logout-btn:hover {
+  background: #cf0217;
+}
+
+.pos-rel {
+  position: relative;
+}
+
+.pos-rel .appointment {
+  position: absolute;
+  right: 15px;
+  top: 5px;
+  font-size: 24px;
+}
+
+.pos-rel.overlay-box .appointment{
+  color: #fff;
+}
+
+.pos-rel .appointment span {
+  font-size: 10px;
+  width: 24px;
+  height: 24px;
+  position: absolute;
+  background: #007efb;
+  border-radius: 100%;
+  color: #fff;
+  display: flex;
+  top: 20px;
+  right: -10px;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+select#status {
+  padding: 0.58rem 2rem;
+  padding-left: 1rem;
+}
+
+select.pending {
+  background-color: #ffe820 !important;
+  border-color: #ffe820;
+}
+
+select[disabled].pending {
+  background-color: #ffeeb9 !important;
+}
+
+select.confirmed {
+  background-color: #7ED321 !important;
+  border-color: #7ED321;
+}
+
+select[disabled].confirmed {
+  background-color: #d1ff9e !important;
+}
+
+select.canceled {
+  background-color: #ff7171 !important;
+  border-color: #ff7171;
+}
+
+select[disabled].canceled {
+  background-color: #ffa8a8 !important;
+}
+
+select[disabled] {
+  cursor: no-drop;
+}
+
+small.exp {
+  color: #da3344;
+  font-weight: bold;
+}
+
+.MuiTable-root td span>p:last-child {
+  margin: 0;
+}

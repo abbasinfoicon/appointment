@@ -4,15 +4,17 @@ import React, { useEffect, useState } from 'react'
 import FetchData from '@/app/components/FetchData';
 import { useCookies } from 'react-cookie';
 import { toast } from 'react-toastify';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useGetAllDoctorQuery, useGetSlotByDrQuery } from '@/redux/slices/serviceApi';
 import JEditor from '@/app/(backend)/components/JEditor';
 
 const Add = () => {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const dId = searchParams.get('dId');
     const [data, setData] = useState({ slot_date: '', slot_start_time: '', slot_end_time: '', doctor: '', patient: '', description: '' });
     const [content, setContent] = useState('');
-    const [drid, setDrId] = useState("");
+    const [drid, setDrId] = useState(dId || '');
     const [drdate, setDrdate] = useState("");
     const [slot, setSlot] = useState([]);
     const [dataByDate, setDataByDate] = useState([]);
@@ -28,6 +30,7 @@ const Add = () => {
     const fetchData = async () => {
         try {
             const res = await FetchData({ url: "user/all_patient", method: "POST", authorization: `Bearer ${token}` });
+            // const res = await FetchData({ url: "app/allRequests", method: "GET", authorization: `Bearer ${token}`, contentType: "application/json" });
 
             if (!res.ok) {
                 throw new Error('Failed to fetch data from user/all_patient');
@@ -101,7 +104,12 @@ const Add = () => {
             if (result.status === 201 || res.ok) {
                 setData({ name: '', email: '', phone_no: '', subject: '', description: '' });
                 toast.success("Appointment Submit Successfull");
-                router.push('/dashboard/appointments');
+                if (dId === null) {
+                    router.push('/dashboard/appointments');
+                } else {
+                    router.push(`/dashboard/doctors/${dId}/appointment`);
+                }
+
             }
 
         } catch (error) {
@@ -117,7 +125,6 @@ const Add = () => {
     const today = new Date().toISOString().split('T')[0];
     const filteredSlots = slot.filter(item => item.slot_date >= today);
     const unique = filteredSlots.filter(onlyUnique);
-
 
     return (
         <div className="container-fluid">

@@ -3,17 +3,19 @@ import Link from 'next/link'
 import React, { useEffect, useMemo, useState } from 'react'
 import { MaterialReactTable, useMaterialReactTable, } from 'material-react-table';
 import { useCookies } from 'react-cookie';
-import { toast } from 'react-toastify'
 import FetchData from '@/app/components/FetchData';
 import Loading from '@/app/loading';
-import DeleteModal from '../../components/DeleteModal';
+import DeleteModal from '@/app/(backend)/components/DeleteModal';
+import { useParams, useSearchParams } from 'next/navigation';
 
-const Pages = () => {
+const Appointment = () => {
+    const petientId = useParams();
+    const pstId = petientId.name;
+    const searchParams = useSearchParams();
+    const appId = searchParams.get('appId');
     const [data, setData] = useState([]);
     const [deleteContent, setDeleteContent] = useState(false);
     const [deleteId, setDeleteId] = useState('');
-    const [page, setPage] = useState('');
-    const [isPageExists, setIsPageExists] = useState(false);
     const [loading, setLoading] = useState(true);
     const [cookies] = useCookies(['access_token']);
     const token = cookies.access_token;
@@ -46,42 +48,55 @@ const Pages = () => {
 
     const handleDeletePopup = (row) => {
         setDeleteContent(!deleteContent);
-        setDeleteId(row.original.service_id);
+        setDeleteId(row.original.id);
     }
+
+    const isDatePassed = (dateString) => {
+        const currentDate = new Date();
+        const expireDate = new Date(dateString);
+        expireDate.setDate(expireDate.getDate() + 1);
+        expireDate.setHours(23, 59, 59, 999);
+        return currentDate > expireDate;
+    };
 
     const columns = useMemo(
         () => [
             {
-                accessorKey: 'service_id',
-                header: 'Page Id',
+                accessorKey: 'id',
+                header: 'Id',
                 size: 50,
             },
             {
-                accessorKey: 'service_name',
-                header: 'Page Name',
+                accessorKey: 'appointment_id.doctor.user.id',
+                header: 'Doctor Name',
                 size: 50,
-            },
-            {
-                accessorKey: 'image',
-                header: 'Banner Image',
-                size: 100,
                 Cell: ({ row }) => {
-                    if (row.original.image) {
-                        return <img src={process.env.BASE_URL + row.original.image} alt="Slider Image" style={{ width: '100px', height: 'auto' }} />
-                    } else {
-                        return null;
-                    }
-                },
+                    return (
+                        <span>{row.original.appointment_id.doctor.user.first_name} {row.original.appointment_id.doctor.user.last_name}</span>
+                    )
+                }
             },
             {
-                accessorKey: 'title',
-                header: 'Title',
-                size: 200,
+                accessorKey: 'appointment_id.id',
+                header: 'Patient Problem',
+                Cell: ({ row }) => {
+                    return (
+                        <span dangerouslySetInnerHTML={{ __html: row.original.appointment_id.description }}></span>
+                    )
+                }
             },
             {
-                accessorKey: 'subtitle',
-                header: 'Subtitle',
-                size: 200,
+                accessorKey: 'prescription_detail',
+                header: 'Prescription Detail',
+                Cell: ({ row }) => {
+                    return (
+                        <span dangerouslySetInnerHTML={{ __html: row.original.prescription_detail }}></span>
+                    )
+                }
+            },
+            {
+                accessorKey: 'notes',
+                header: 'Notes',
             },
             {
                 accessorKey: 'updated_at',
@@ -101,10 +116,8 @@ const Pages = () => {
                 header: 'Actions',
                 size: 150,
                 Cell: ({ row }) => (
-                    <div>
-                        <Link href={`pages/${row.original.service_name}`} className='btn rounded btn-primary'><i className="icon-eye"></i></Link>
-                        <Link href={`pages/edit/${row.original.service_name}`} className='btn rounded btn-info mx-1'><i className="icon-pencil"></i></Link>
-                        <button className='btn rounded btn-danger' onClick={() => handleDeletePopup(row)}><i className="icon-trash"></i></button>
+                    <div className='d-flex'>
+                        <button className='btn rounded btn-danger' onClick={() => handleDeletePopup(row)} title='Delete'><i className="icon-trash"></i></button>
                     </div>
                 ),
             },
@@ -112,45 +125,44 @@ const Pages = () => {
         [],
     );
 
-    const table = useMaterialReactTable({ columns, data: data || [] });
+    const table = useMaterialReactTable({
+        columns,
+        data: data || [],
+        enableGlobalFilterModes: true,
+        initialState: {
+            showGlobalFilter: true,
+        },
+        positionGlobalFilter: "left",
+        muiSearchTextFieldProps: {
+            placeholder: 'Doctor, Patient and Date-Time',
+            sx: { minWidth: '350px' },
+            variant: 'outlined',
+        },
+    });
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await FetchData({ url: "app/allInfo", method: "GET", authorization: `Bearer ${token}` });
+                const res = await FetchData({ url: "app/prescriptions", method: "GET", authorization: `Bearer ${token}` });
 
                 if (!res.ok) {
                     throw new Error('Failed to fetch data');
                 }
 
                 const result = await res.json();
+                const filterApp = result.filter(item => item.appointment_id.id == appId && item.appointment_id.patient.id == pstId);
+                setData(filterApp);
 
-                // Update the state with result.data
-                setData(result.data);
                 setLoading(false);
             } catch (error) {
                 console.error('Error fetching data:', error.message);
-                setLoading(false);
+                setLoading(true);
             }
         };
 
         fetchData();
 
-    }, [token, deleteContent]);
-
-    const handlePage = (e) => {
-        const enteredPage = e.target.value.toLowerCase();
-        const pageExists = data.some(item => item.service_name.toLowerCase() === enteredPage);
-
-        setIsPageExists(pageExists);
-
-        if (pageExists) {
-            toast.error("Page already Created!!!");
-            return;
-        }
-
-        setPage(e.target.value);
-    };
+    }, [token, deleteContent, pstId]);
 
     if (loading) {
         return <Loading />;
@@ -161,13 +173,15 @@ const Pages = () => {
             <div className="row page-titles mx-0">
                 <div className="col-sm-6">
                     <div className="welcome-text">
-                        <h4>All Pages ({data.length})</h4>
+                        <h4>All Prescription ({data.length})</h4>
                     </div>
                 </div>
                 <div className="col-sm-6 justify-content-sm-end mt-2 mt-sm-0 d-flex">
                     <ol className="breadcrumb">
-                        <li className="breadcrumb-item"><Link href="/dashboard/pages">Pages</Link></li>
-                        <li className="breadcrumb-item active"><Link href="#">All Pages</Link></li>
+                        <li className="breadcrumb-item"><Link href={`/dashboard/patients`}>Patients</Link></li>
+                        <li className="breadcrumb-item"><Link href={`/dashboard/patients/${pstId}/appointment`}>Appointment</Link></li>
+                        <li className="breadcrumb-item"><Link href={`/dashboard/patients/${pstId}/prescription/?appId=${appId}`}>Prescription</Link></li>
+                        <li className="breadcrumb-item active"><Link href="#">All Prescription</Link></li>
                     </ol>
                 </div>
             </div>
@@ -176,12 +190,9 @@ const Pages = () => {
                 <div className="col-12">
                     <div className="card">
                         <div className="card-header">
-                            <h4 className="card-title">Pages Details Lists</h4>
+                            <h4 className="card-title">Prescription Details Lists</h4>
                             <div className="add-new text-right">
-                                <div className="create-page">
-                                    <input type="text" name="page" id="page" value={page} onChange={handlePage} className='form-control' placeholder='Enter Page Name' />
-                                    <Link href={`/dashboard/pages/add?page=${encodeURIComponent(page)}`} className="btn btn-primary btn-lg btn-rounded pl-5 pr-5 add-new" disabled={!page || isPageExists}>Add New</Link>
-                                </div>
+                                {data.length ? null : <Link href={`/dashboard/patients/${pstId}/prescription/add/?appId=${appId}`} className="btn btn-outline-primary btn-lg btn-rounded mt-1 pl-5 pr-5 add-new">Add Prescription</Link>}
                             </div>
                         </div>
 
@@ -196,9 +207,9 @@ const Pages = () => {
                 </div>
             </div>
 
-            <DeleteModal did={deleteId} dc={deleteContent} setdc={setDeleteContent} page="pages" url="app/delete" />
+            <DeleteModal did={deleteId} dc={deleteContent} setdc={setDeleteContent} page={"patients/" + pstId + "/prescription/?appId=" + appId} url={"app/delete_prescriptions"} />
         </div>
     )
 }
 
-export default Pages
+export default Appointment

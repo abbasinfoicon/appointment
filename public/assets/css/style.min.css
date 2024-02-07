@@ -15538,6 +15538,13 @@ button {
     display: flex;
     align-items: center;
     justify-content: center;
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    background: #fff;
+    z-index: 99;
+    left: 0;
+    top: 0;
 }
 
 .pulse-container {
@@ -15545,6 +15552,8 @@ button {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: relative;
+    z-index: 999999999;
 }
 
 .pulse-bubble {
@@ -15622,4 +15631,28 @@ button {
 
 span.badge.disabled {
     cursor: not-allowed;
+}
+
+.specialities-box {}
+
+.specialities-box .dez-media {
+    height: 264px;
+    overflow: hidden;
+}
+
+.specialities-box .dez-media a {
+    display: block;
+    height: 100%;
+}
+
+.specialities-box .dez-media img {
+    height: 100%;
+    object-fit: cover;
+}
+
+select {
+    -webkit-appearance: none;
+    background: url(../images/select-arrow.png) #fff !important;
+    background-repeat: no-repeat !important;
+    background-position: top 15px right 10px !important;
 }
