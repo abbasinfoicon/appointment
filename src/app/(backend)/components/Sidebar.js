@@ -203,7 +203,7 @@ const Sidebar = () => {
                         <ul className="mm-collapse">
                             <li><Link href="/dashboard/profile">Profile</Link></li>
                             <li><Link href="/dashboard/profile/change-password">Change Password</Link></li>
-                            <li><Link href="/dashboard/profile/app-calender">Calendar</Link></li>
+                            <li><Link href="/dashboard/profile/calender">Calendar</Link></li>
                             <li><Link href="/dashboard/lock-screen">Lock Screen</Link></li>
                         </ul>
                     </li>
