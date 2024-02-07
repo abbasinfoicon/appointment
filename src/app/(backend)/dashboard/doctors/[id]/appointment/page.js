@@ -183,6 +183,12 @@ const Appointment = () => {
         enableGlobalFilterModes: true,
         initialState: {
             showGlobalFilter: true,
+            sortBy: [
+                {
+                    id: 'updated_at',
+                    desc: true,
+                },
+            ],
         },
         positionGlobalFilter: "left",
         muiSearchTextFieldProps: {
@@ -211,7 +217,8 @@ const Appointment = () => {
                 const docIdNumber = parseInt(docId.id, 10);
 
                 const filteredData = result.data.filter(item => item.doctor.user.id === docIdNumber);
-                const filteredSearch = search ? filteredData.filter(item => item.slot_date === search) : filteredData;
+                const sortedData = filteredData.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+                const filteredSearch = search ? sortedData.filter(item => item.slot_date === search) : sortedData;
 
                 setData(filteredSearch);
                 setLoading(false);

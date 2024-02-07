@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react'
 import { useCookies } from 'react-cookie';
 
 const Appointment = () => {
-    const [data, setData] = useState();
+    const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [cookies] = useCookies(['access_token']);
     const token = cookies.access_token;
@@ -21,6 +21,7 @@ const Appointment = () => {
                 }
 
                 const result = await res.json();
+
                 setData(result.data);
                 setLoading(false);
             } catch (error) {
@@ -54,14 +55,14 @@ const Appointment = () => {
                         <thead>
                             <tr>
                                 <th className="sn">
-                                    SN
+                                    #ID
                                 </th>
                                 <th className="name">
                                     Doctor
                                 </th>
 
                                 <th className="date">
-                                    Date
+                                    Date/Time
                                 </th>
 
                                 <th className="chamber">
@@ -79,33 +80,38 @@ const Appointment = () => {
                         </thead>
 
                         <tbody>
-                            <tr className="tabile_row">
-                                <td className="sn">
-                                    <p>1</p>
-                                </td>
+                            {
+                                data.length ? (
+                                    data.slice().reverse().map((item) => (
+                                        <tr className="tabile_row">
+                                            <td className="sn">
+                                                <p>1</p>
+                                            </td>
 
-                                <td className="name">
-                                    <p>Dr. Samuel Bro</p>
-                                    <span>Dental</span>
-                                </td>
+                                            <td className="name">
+                                                <p>Dr. Samuel Bro</p>
+                                                <span>Dental</span>
+                                            </td>
 
-                                <td className="date">
-                                    <p>05 Jun 2023</p>
-                                    <span className="date_time">4:30 PM</span>
-                                </td>
+                                            <td className="date">
+                                                <p>05 Jun 2023</p>
+                                                <span className="date_time">4:30 PM</span>
+                                            </td>
 
-                                <td className="chamber">
-                                    <p>12/3 Mirpur Dhaka Bangladesh</p>
-                                </td>
+                                            <td className="chamber">
+                                                <p>12/3 Mirpur Dhaka Bangladesh</p>
+                                            </td>
 
-                                <td className="status">
-                                    <button>Complete</button>
-                                </td>
+                                            <td className="status">
+                                                <button>Complete</button>
+                                            </td>
 
-                                <td className="edit">
-                                    <a href="#">Edit</a>
-                                </td>
-                            </tr>
+                                            <td className="edit">
+                                                <a href="#">Edit</a>
+                                            </td>
+                                        </tr>
+                                    ))) : <tr><td colSpan={6}>Appointment not Added!!!</td></tr>
+                            }
                         </tbody>
                     </table>
                 </div>

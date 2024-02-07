@@ -18,7 +18,8 @@ const PatientDetail = () => {
   const [deleteContent, setDeleteContent] = useState(false);
   const [deleteId, setDeleteId] = useState('');
   const allAppointment = useGetAppointmentQuery(token);
-  const [appointment, setAppointment] = useState([])
+  const [appointment, setAppointment] = useState([]);
+  const [prescription, setPrescription] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,6 +41,31 @@ const PatientDetail = () => {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await FetchData({ url: "app/prescriptions", method: "GET", authorization: `Bearer ${token}` });
+
+        if (!res.ok) {
+          throw new Error('Failed to fetch data');
+        }
+
+        const result = await res.json();
+
+        const filterApp = result.filter(item => item.appointment_id.patient.id == id);
+        setPrescription(filterApp);
+
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching data:', error.message);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+
+  }, [token, deleteContent, id]);
 
   const handleDeletePopup = (did) => {
     setDeleteContent(!deleteContent);
@@ -66,8 +92,6 @@ const PatientDetail = () => {
   if (loading) {
     return <Loading />;
   }
-
-  console.log("Patient appointment:", appointment)
 
   return (
     <div className="container-fluid">
@@ -126,28 +150,58 @@ const PatientDetail = () => {
             </div>
             <div className="card-body dz-scroll">
               {
-                appointment.length ? (
-                  appointment.slice().reverse().map((item, i) => (
-                    <div className={`media mb-3 align-items-start bg-white border-bottom ${isDatePassed(item.slot_date) ? 'disable' : ''}`} key={i}>
+                prescription.length ? (
+                  prescription.slice().reverse().map((item) => (
+                    <div className={`media mb-3 align-items-start bg-white border-bottom ${isDatePassed(item.appointment_id.slot_date) ? 'disable' : ''}`} key={item.id}>
                       <img className="mr-3 p-2 border" alt="image" width="40" src="/assets/images/icons/21.png" />
                       <div className="media-body">
-                        <h5 className="mt-0 mb-1 text-pale-sky">Doctor Name: {item.doctor.user.first_name} {item.doctor.user.last_name}</h5>
-                        <span className="text-muted mb-0">Email: {item.doctor.user.email}</span>
-                        <h5 className="mt-0 mb-1 text-pale-sky">Date: {item.slot_date}</h5>
-                        <span className="text-muted mb-0">Time: {item.slot_start_time} - {item.slot_end_time}</span><br />
-                        <span className="mb-0 text-pale-sky"><strong>Specialization:</strong> -{item.doctor.specialization}</span><br />
-                        <span className="mb-0 text-pale-sky"><strong>Experience:</strong> -{item.doctor.experience}</span>
-                        <p dangerouslySetInnerHTML={{ __html: item.description }}></p>
+                        <h5 className="mt-0 mb-1 text-pale-sky">Doctor Name: {item.appointment_id.doctor.user.first_name} {item.appointment_id.doctor.user.last_name}</h5>
+                        <span className="text-muted mb-0">Email: {item.appointment_id.doctor.user.email}</span>
+                        <h5 className="mt-0 mb-1 text-pale-sky">Date: {item.appointment_id.slot_date}</h5>
+                        <span className="text-muted mb-0">Time: {item.appointment_id.slot_start_time} - {item.appointment_id.slot_end_time}</span><br />
+                        <span className="mb-0 text-pale-sky"><strong>Specialization:</strong> -{item.appointment_id.doctor.specialization}</span><br />
+                        <span className="mb-0 text-pale-sky"><strong>Experience:</strong> -{item.appointment_id.doctor.experience}</span>
+                        <p></p>
+                        <h4 className='mb-0'><strong>Problem:</strong></h4>
+                        <p dangerouslySetInnerHTML={{ __html: item.appointment_id.description }}></p>
+
+                        <p className='mb-0'><strong>Prescription:</strong></p>
+                        <p dangerouslySetInnerHTML={{ __html: item.prescription_detail }}></p>
+
+                        <p className="mb-0"><strong>Notes:</strong></p>
+                        <p>{item.notes}</p>
 
                         <div className="footer-btn">
-                          <Link href={`/dashboard/appointments/${item.id}?docId=${id}`} className="btn btn-info btn-rounded mb-2"><i className="icon-eye"></i> View</Link>
-                          <Link href={`${id}/prescription?appId=${item.id}`} className="btn btn-primary btn-rounded mb-2 mx-1"><i className="fa fa-medkit"></i> Add Prescription</Link>
+                          <Link href={`/dashboard/appointments/${item.appointment_id.id}?docId=${id}`} className="btn btn-info btn-rounded mb-2"><i className="icon-eye"></i> View Appointment</Link>
+                          <Link href={`${id}/prescription?appId=${item.appointment_id.id}`} className="btn btn-primary btn-rounded mb-2 mx-1"><i className="fa fa-medkit"></i> View Prescription</Link>
                         </div>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <h5>No Appointments Available!!!</h5>
+                  appointment.length ? (
+                    appointment.slice().reverse().map((item, i) => (
+                      <div className={`media mb-3 align-items-start bg-white border-bottom ${isDatePassed(item.slot_date) ? 'disable' : ''}`} key={i}>
+                        <img className="mr-3 p-2 border" alt="image" width="40" src="/assets/images/icons/21.png" />
+                        <div className="media-body">
+                          <h5 className="mt-0 mb-1 text-pale-sky">Doctor Name: {item.doctor.user.first_name} {item.doctor.user.last_name}</h5>
+                          <span className="text-muted mb-0">Email: {item.doctor.user.email}</span>
+                          <h5 className="mt-0 mb-1 text-pale-sky">Date: {item.slot_date}</h5>
+                          <span className="text-muted mb-0">Time: {item.slot_start_time} - {item.slot_end_time}</span><br />
+                          <span className="mb-0 text-pale-sky"><strong>Specialization:</strong> -{item.doctor.specialization}</span><br />
+                          <span className="mb-0 text-pale-sky"><strong>Experience:</strong> -{item.doctor.experience}</span>
+                          <p dangerouslySetInnerHTML={{ __html: item.description }}></p>
+
+                          <div className="footer-btn">
+                            <Link href={`/dashboard/appointments/${item.id}?docId=${id}`} className="btn btn-info btn-rounded mb-2"><i className="icon-eye"></i> View Appointment</Link>
+                            <Link href={`${id}/prescription?appId=${item.id}`} className="btn btn-primary btn-rounded mb-2 mx-1"><i className="fa fa-medkit"></i> View Prescription</Link>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <h5>No Appointments Available!!!</h5>
+                  )
                 )
               }
             </div>
