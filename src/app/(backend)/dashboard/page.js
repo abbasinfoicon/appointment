@@ -10,8 +10,7 @@ import FetchData from '@/app/components/FetchData'
 
 const Dashboard = () => {
     const [cookies] = useCookies(['access_token']);
-    const [patient, setPatient] = useState({});
-    const [appointment, setAppointment] = useState([]);
+    const [patient, setPatient] = useState([]);
     const token = cookies.access_token;
     const doctor = useGetAllDoctorQuery();
     const { data = [], isLoading, isFetching, isError } = useGetAllUserQuery(token);
@@ -25,14 +24,19 @@ const Dashboard = () => {
         const fetchData = async () => {
             try {
                 const res = await FetchData({ url: "user/all_patient", method: "POST", authorization: `Bearer ${token}` });
+                const appointRes = await FetchData({ url: "app/appointments", method: "GET", authorization: `Bearer ${token}`, contentType: "application/json" });
 
-                if (!res.ok) {
+                if (!res.ok || !appointRes.ok) {
                     throw new Error('Failed to fetch data');
                 }
 
                 const result = await res.json();
+                const appointData = await appointRes.json();
+                console.log("appointData:", appointData)
 
-                setPatient(result.data);
+                setPatient(role === 'Doctor' ? appointData.data : result.data);
+
+
             } catch (error) {
                 console.error('Error fetching data:', error.message);
             }
@@ -40,6 +44,14 @@ const Dashboard = () => {
 
         fetchData();
     }, [token]);
+
+    if (isLoading || isFetching) {
+        return <div>Loading...</div>;
+    }
+
+    if (isError) {
+        return <div>Error fetching data. Please try again later.</div>;
+    }
 
     return (
         <div className="container-fluid">

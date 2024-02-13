@@ -48,7 +48,6 @@ const DoctorDetail = () => {
     fetchData();
   }, []);
 
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -221,65 +220,47 @@ const DoctorDetail = () => {
             </div>
             <div className="card-body dz-scroll">
               {
-                prescription.length ? (
-                  prescription.slice().reverse().map((item, i) => (
-                    <div className={`media mb-3 align-items-start bg-white border-bottom ${isDatePassed(item.appointment_id.slot_date) ? 'disable' : ''}`} key={i}>
+                appointment.length ? (
+                  appointment.slice().reverse().map((item) => (
+                    <div className={`media mb-3 align-items-start bg-white border-bottom ${isDatePassed(item.slot_date) ? 'disable' : ''}`} key={item.id}>
                       <img className="mr-3 p-2 border" alt="image" width="40" src="/assets/images/icons/21.png" />
                       <div className="media-body">
-                        <h5 className="mt-0 mb-1 text-pale-sky">Patient Name: {item.appointment_id.patient.first_name} {item.appointment_id.patient.last_name}</h5>
-                        <span className="text-muted mb-0">Create by: {item.appointment_id.created_by}</span>
-                        <h5 className="mt-0 mb-1 text-pale-sky">Date: {item.appointment_id.slot_date}</h5>
-                        <span className="text-muted mb-0">Time: {item.appointment_id.slot_start_time} - {item.appointment_id.slot_end_time}</span><br />
-                        <span className="mb-0 text-pale-sky"><strong>Phone:</strong> -{item.appointment_id.patient.phone_no}</span>
-                        <p></p>
-                        <h4 className='mb-0'><strong>Patient Problem:</strong></h4>
-                        <p dangerouslySetInnerHTML={{ __html: item.appointment_id.description }}></p>
+                        <h5 className="mt-0 mb-1 text-pale-sky">Appointment ID: {item.id}</h5>
+                        <h5 className="mt-0 mb-1 text-pale-sky">Patient Name: {item.patient.first_name} {item.patient.last_name}</h5>
+                        <span className="text-muted mb-0">Create by: {item.created_by}</span>
+                        <h5 className="mt-0 mb-1 text-pale-sky">Date: {item.slot_date}</h5>
+                        <span className="text-muted mb-0">Time: {item.slot_start_time} - {item.slot_end_time}</span><br />
+                        <span className="mb-0 text-pale-sky"><strong>Phone:</strong> -{item.patient.phone_no}</span>
+                        <p dangerouslySetInnerHTML={{ __html: item.description }}></p>
 
-                        <p className='mb-0'><strong>Prescription:</strong></p>
-                        <p dangerouslySetInnerHTML={{ __html: item.prescription_detail }}></p>
-
-                        <p className="mb-0"><strong>Notes:</strong></p>
-                        <p>{item.notes}</p>
-
+                        {
+                          prescription.length ? (
+                            prescription.filter(pres => pres.appointment_id.id === item.id).length > 0 ? prescription.filter(pres => pres.appointment_id.id === item.id).map(fItem => (
+                              <div className="prescrtion" key={fItem.id}>
+                                <p className='mb-0'><strong>Prescription:</strong></p>
+                                <p dangerouslySetInnerHTML={{ __html: fItem.prescription_detail }}></p>
+                                <p className="mb-0"><strong>Notes:</strong></p>
+                                <p>{fItem.notes}</p>
+                              </div>
+                            )) : <p>No Prescription...!!</p>
+                          ) : (
+                            <p>Prescription Not added...!!</p>
+                          )
+                        }
 
                         <div className="footer-btn">
-                          <Link href={`/dashboard/appointments/${item.appointment_id.id}?docId=${id}`} className="btn btn-info btn-rounded mb-2"><i className="icon-eye"></i> View Appointment</Link>
-                          <Link href={`${id}/prescription?appId=${item.appointment_id.id}`} className="btn btn-primary btn-rounded mb-2 mx-1"><i className="fa fa-medkit"></i> View Prescription</Link>
+                          <Link href={`/dashboard/appointments/${item.id}?docId=${id}`} className="btn btn-info btn-rounded mb-2"><i className="icon-eye"></i> View Appointment</Link>
+                          <Link href={`${id}/prescription?appId=${item.id}`} className="btn btn-primary btn-rounded mb-2 mx-1"><i className="fa fa-medkit"></i> View Prescription</Link>
                         </div>
                       </div>
 
                       <div className="media-right">
-                        <p className={`btn btn-${item.appointment_id.status === 'Pending' ? 'warning' : item.appointment_id.status === 'Confirmed' ? 'success' : 'danger'}`}>{item.appointment_id.status}</p>
+                        <p className={`btn btn-${item.status === 'Pending' ? 'warning' : item.status === 'Confirmed' ? 'success' : 'danger'}`}>{item.status}</p>
                       </div>
                     </div>
                   ))
                 ) : (
-                  appointment.length ? (
-                    appointment.slice().reverse().map((item, i) => (
-                      <div className={`media mb-3 align-items-start bg-white border-bottom ${isDatePassed(item.slot_date) ? 'disable' : ''}`} key={i}>
-                        <img className="mr-3 p-2 border" alt="image" width="40" src="/assets/images/icons/21.png" />
-                        <div className="media-body">
-                          <h5 className="mt-0 mb-1 text-pale-sky">Patient Name: {item.patient.first_name} {item.patient.last_name}</h5>
-                          <span className="text-muted mb-0">Create by: {item.created_by}</span>
-                          <h5 className="mt-0 mb-1 text-pale-sky">Date: {item.slot_date}</h5>
-                          <span className="text-muted mb-0">Time: {item.slot_start_time} - {item.slot_end_time}</span><br />
-                          <span className="mb-0 text-pale-sky"><strong>Phone:</strong> -{item.patient.phone_no}</span>
-                          <p dangerouslySetInnerHTML={{ __html: item.description }}></p>
-
-                          <div className="footer-btn">
-                            <Link href={`/dashboard/appointments/${item.id}?docId=${id}`} className="btn btn-info btn-rounded mb-2"><i className="icon-eye"></i> View Appointment</Link>
-                            <Link href={`${id}/prescription?appId=${item.id}`} className="btn btn-primary btn-rounded mb-2 mx-1"><i className="fa fa-medkit"></i> View Prescription</Link>
-                          </div>
-                        </div>
-
-                        <div className="media-right">
-                          <p className={`btn btn-${item.status === 'Pending' ? 'warning' : item.status === 'Confirmed' ? 'success' : 'danger'}`}>{item.status}</p>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <h5>No Appointments Available!!!</h5>
-                  )
+                  <h5>No Appointments Available!!!</h5>
                 )
               }
             </div>

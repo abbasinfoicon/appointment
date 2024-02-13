@@ -14,24 +14,24 @@ const Edit = () => {
   const [cookies, setCookie, removeCookies] = useCookies(['access_token']);
   const token = cookies.access_token;
 
-  const fetchData = async () => {
-    try {
-      const res = await FetchData({ url: `user/details`, method: "GET", authorization: `Bearer ${token}` });
-
-      if (!res.ok) {
-        throw new Error('Failed to fetch data');
-      }
-
-      const result = await res.json();
-      setData(result.data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching data:', error.message);
-      setLoading(true);
-    }
-  };
-
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await FetchData({ url: `user/details`, method: "GET", authorization: `Bearer ${token}` });
+
+        if (!res.ok) {
+          throw new Error('Failed to fetch data');
+        }
+
+        const result = await res.json();
+        setData(result.data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching data:', error.message);
+        setLoading(true);
+      }
+    };
+
     fetchData();
   }, []);
 

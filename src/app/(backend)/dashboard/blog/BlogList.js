@@ -16,6 +16,7 @@ const BlogList = ({ onDataChange }) => {
     const [loading, setLoading] = useState(true);
     const [cookies] = useCookies(['access_token']);
     const token = cookies.access_token;
+    const role = cookies.role;
 
     const formatDate = (dateTimeString) => {
         try {
@@ -147,7 +148,10 @@ const BlogList = ({ onDataChange }) => {
                 size: 100,
                 Cell: ({ row }) => (
                     <div className="custom_checkbox">
-                        <input id={`c${row.index}`} type="checkbox" className="switch" checked={row.original.availablity} onChange={() => handleAvailabilityChange(row)} disabled={row.original.approved === 'Approved' ? false : true} />
+                        {
+                            row.original.created_by.roles === 'Doctor' ? <span>{row.original.approved === 'Pending' ? 'Hidden' : 'Visible'}</span> :
+                                <input id={`c${row.index}`} type="checkbox" className="switch" checked={row.original.availablity} onChange={() => handleAvailabilityChange(row)} disabled={row.original.approved === 'Approved' ? false : true} />
+                        }
                     </div>
                 ),
             },

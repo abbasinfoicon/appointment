@@ -14,7 +14,7 @@ const nextConfig = {
         return config;
     },
     env: {
-        BASE_URL: '//172.232.189.142:8000',
+        BASE_URL: 'http://172.232.189.142:8000',
     },
 };
 

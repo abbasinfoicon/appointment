@@ -1,10 +1,10 @@
 'use client'
 import Link from 'next/link'
-import React from 'react'
+import React, { useState } from 'react'
 import BlogList from './BlogList';
 
 const Blog = () => {
-  const [dataLength, setDataLength] = React.useState(0);
+  const [dataLength, setDataLength] = useState(0);
 
   const handleDataChange = (data) => {
     setDataLength(data.length);
